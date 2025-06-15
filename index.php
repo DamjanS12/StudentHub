@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// If the user is already logged in, redirect to tasks page
+
 if (isset($_SESSION['user_id'])) {
     header("Location: app/views/tasks/index.php");
     exit();

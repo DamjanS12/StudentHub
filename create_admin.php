@@ -1,4 +1,5 @@
 <?php
+
 include 'app/models/db.php';
 
 $first_name = 'Admin';

@@ -25,7 +25,7 @@ function send_email($task, $recipient) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // 'tls'
         $mail->Port       = $smtp_port;
 
-        // Sender and recipient
+       
         $mail->setFrom($_SESSION['email'], 'studenthub');
         foreach ($recipients as $email) {
             $mail->addAddress($email);
