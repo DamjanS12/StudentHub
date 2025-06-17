@@ -18,7 +18,6 @@ if ($createdBy) {
     $sql .= " AND created_by = '" . $db->real_escape_string($createdBy) . "'";
 }
 $rows = $db->query($sql);
-
 ?>
 
 <?php include '../header.php'; ?>
@@ -33,18 +32,20 @@ $rows = $db->query($sql);
             <i class="bi bi-plus-lg me-2"></i> Add Project
           </button>
         <?php endif; ?>
+
         <div id="addProject" class="modal fade" role="dialog">
           <div class="modal-dialog">
             <?php
             $professor_result = $db->query("SELECT id, first_name, last_name FROM user WHERE role = 'Professor'");
             $professors = [];
             while ($prof = $professor_result->fetch_assoc()) {
-            $professors[] = $prof;
-          }
-          include 'add.php';
-          ?>
+              $professors[] = $prof;
+            }
+            include 'add.php';
+            ?>
           </div>
         </div>
+
         <table class="table">
           <hr>
           <form action="" method="GET">
@@ -58,16 +59,17 @@ $rows = $db->query($sql);
             </div>
             <button type="submit" class="btn btn-outline-info">Filter</button>
           </form>
+
           <table class="table">
             <thead>
               <tr>
-                <th scope="col">Id</th>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
-                <th scope="col">Assigned tasks</th>
-                <th scope="col">Documentation</th>
-                <th scope="col">Created by</th>
-                <th scope="col">Created at</th>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Assigned tasks</th>
+                <th>Documentation</th>
+                <th>Created by</th>
+                <th>Created at</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -75,57 +77,59 @@ $rows = $db->query($sql);
             <tbody>
               <?php while($row = $rows->fetch_assoc()): ?>
                 <tr>
-                  <td class="col-1"><?php echo $row['id'] ?></td>
-                  <td class="col-2"><?php echo $row['name'] ?></td>
-                  <td class="col-4"><?php echo $row['description'] ?></td>
-                  <td class="col-4">
-                  <?php 
-                    $tasks = get_tasks_by_project($row['id']);
-                    if (!empty($tasks)) {
-                        $taskTitles = '';
-                        foreach ($tasks as $index => $task) {
-                            if ($index > 0) {
-                                $taskTitles .= ', ';
-                            }
-                            $taskTitles .= htmlspecialchars($task['title']);
-                        }
-                        echo "<p>$taskTitles</p>";
-                    } else {
-                        echo "<p>No tasks found for this project.</p>";
-                    }
-                  ?>
+                  <td><?php echo $row['id'] ?></td>
+                  <td><?php echo htmlspecialchars($row['name']) ?></td>
+                  <td><?php echo htmlspecialchars($row['description']) ?></td>
+                  <td>
+                    <?php 
+                      $tasks = get_tasks_by_project($row['id']);
+                      if (!empty($tasks)) {
+                          $taskTitles = implode(', ', array_map(function($task) {
+                              return htmlspecialchars($task['title']);
+                          }, $tasks));
+                          echo $taskTitles;
+                      } else {
+                          echo "No tasks found.";
+                      }
+                    ?>
                   </td>
-                  <td class="col-2">
+                  <td>
                     <?php if (!empty($row['file_path'])): ?>
-                      <a href="../../controllers/download.php?file_path=<?php echo urlencode($row['file_path']); ?>" download>Download here...</a>
+                      <a href="../../controllers/download.php?file_path=<?php echo urlencode($row['file_path']); ?>" download>Download</a>
                     <?php else: ?>
-                      <span>No file available</span>
+                      <span>No file</span>
                     <?php endif; ?>
                   </td>
-                  <td  class="col-2">
-                    <?php $user = get_user($row['created_by']);
-                        echo htmlspecialchars($user['first_name']) . " " . htmlspecialchars($user['last_name'])?>
-                  </td>
-                  <td class="col-2"><?php echo $row['created_at'] ?></td>
                   <td>
-                      <?php if (isset($_SESSION['username'])): ?>
-                          <button type="button" class="btn btn-success" data-toggle="modal" data-target="#editProject" onclick="populateEditModal(
-                              <?php echo $row['id']; ?>,
-                              '<?php echo htmlspecialchars($row['name']); ?>',
-                              '<?php echo htmlspecialchars($row['description']); ?>',
-                              '<?php echo htmlspecialchars($row['created_by']); ?>'
-                          )">
-                              <i class="bi bi-pencil me-2"></i> Edit
-                          </button>
-                      <?php endif; ?>
+                    <?php 
+                      $user = get_user($row['created_by']);
+                      echo htmlspecialchars($user['first_name'] . " " . $user['last_name']);
+                    ?>
                   </td>
+                  <td><?php echo $row['created_at'] ?></td>
+
+                 
                   <td>
-                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
+                    <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $row['created_by']): ?>
+                      <button type="button" class="btn btn-success" data-toggle="modal" data-target="#editProject" onclick="populateEditModal(
+                          <?php echo $row['id']; ?>,
+                          '<?php echo htmlspecialchars($row['name']); ?>',
+                          '<?php echo htmlspecialchars($row['description']); ?>',
+                          '<?php echo htmlspecialchars($row['created_by']); ?>'
+                      )">
+                        <i class="bi bi-pencil me-2"></i> Edit
+                      </button>
+                    <?php endif; ?>
+                  </td>
+
+                  
+                  <td>
+                    <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $row['created_by']): ?>
                       <form action="../../controllers/projectController.php" method="POST">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                         <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash3"></i> Delete
+                          <i class="bi bi-trash3"></i> Delete
                         </button>
                       </form>
                     <?php endif; ?>
@@ -138,7 +142,7 @@ $rows = $db->query($sql);
       </div>
     </div>
   </div>
-  
+
   <div id="editProject" class="modal fade" role="dialog">
     <div class="modal-dialog">
       <?php include 'edit.php'; ?>
@@ -146,6 +150,7 @@ $rows = $db->query($sql);
   </div>
 
 </div>
+
 <script>
   function populateEditModal(projectId, name, description, created_by) {
     document.getElementById('editProjectId').value = projectId;
@@ -154,4 +159,5 @@ $rows = $db->query($sql);
     document.getElementById('editProjectCreatedBy').value = created_by;
   }
 </script>
+
 <?php include '../footer.php'; ?>

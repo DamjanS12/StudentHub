@@ -35,40 +35,43 @@ if ($action == 'add') {
     }
 
     $file_path = null;
-    if (isset($_FILES['file']) && $_FILES['file']['error'] == UPLOAD_ERR_OK) {
-        $target_dir = '../../uploads/';
-        $target_file = $target_dir . basename($_FILES['file']['name']);
-        $uploadOk = 1;
+if (isset($_FILES['file']) && $_FILES['file']['error'] == UPLOAD_ERR_OK) {
+    $target_dir = __DIR__ . '/../../uploads/';
+    $filename = basename($_FILES['file']['name']);
+    $target_file = $target_dir . $filename;
+    $uploadOk = 1;
 
-        if (file_exists($target_file)) {
-            echo "Sorry, file already exists.";
-            $uploadOk = 0;
-        }
-
-        if ($_FILES['file']['size'] > 2000000) {
-            echo "Sorry, your file is too large.";
-            $uploadOk = 0;
-        }
-
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-        if (!in_array($imageFileType, ['jpg', 'png', 'pdf', 'docx'])) {
-            echo "Sorry, only JPG, PNG, PDF & DOCX files are allowed.";
-            $uploadOk = 0;
-        }
-
-        if ($uploadOk == 0) {
-            echo "Sorry, your file was not uploaded.";
-        } else {
-            if (move_uploaded_file($_FILES['file']['tmp_name'], $target_file)) {
-                $file_path = $target_file;
-            } else {
-                echo "Sorry, there was an error uploading your file.";
-            }
-        }
-    } else {
-        echo "No file uploaded or there was an upload error.";
-        exit;
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0775, true);
     }
+
+    if (file_exists($target_file)) {
+        echo "Sorry, file already exists.";
+        $uploadOk = 0;
+    }
+
+    if ($_FILES['file']['size'] > 2000000) {
+        echo "Sorry, your file is too large.";
+        $uploadOk = 0;
+    }
+
+    $allowed = ['jpg', 'png', 'pdf', 'docx'];
+    $ext = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed)) {
+        echo "Only JPG, PNG, PDF & DOCX files are allowed.";
+        $uploadOk = 0;
+    }
+
+    if ($uploadOk && move_uploaded_file($_FILES['file']['tmp_name'], $target_file)) {
+        $file_path = '../../uploads/' . $filename; 
+        echo "File uploaded successfully.";
+    } else {
+        echo "Failed to upload file.";
+    }
+} else {
+    echo "No file uploaded or there was an error.";
+}
+
 
     add_project($name, $description, $created_by, $file_path, $professor_id);
 
